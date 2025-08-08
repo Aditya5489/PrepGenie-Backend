@@ -5,6 +5,7 @@ const connectDb = require('./config/db');
 const session = require('express-session');
 const passport = require('passport');
 const initializePassport = require('./config/passport');
+const MongoStore = require('connect-mongo');
 
 const authRouter = require('./routes/auth.routes');
 const interviewrouter = require('./routes/interview.routes');
@@ -30,11 +31,15 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI,
+    ttl: 60 * 60 * 24 * 7, 
+  }),
   cookie: {
     httpOnly: true,
-    secure: false, // true if using HTTPS in production
-    sameSite: 'lax', // or 'none' + secure:true if using cross-site cookies
-    maxAge: 1000 * 60 * 60 * 24 * 7,
+    secure: process.env.NODE_ENV === 'production', 
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', 
+    maxAge: 1000 * 60 * 60 * 24 * 7, 
   }
 }));
 
